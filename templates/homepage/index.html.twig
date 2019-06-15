@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col">
+            <p>
+                NbUsers = {{ nbUsers }}
+            </p>
+            <p>
+                NbNewUsers = {{ nbNewUsers }}
+            </p>
+            <p>
+                {% set diff = nbOrders - nbOrdersPreviousWeek %}
+                NbOrders = {{ nbOrders }}
+                ({%- if diff == 0 -%}
+                <span class="text-secondary">{{ diff }}</span>
+            {%- elseif diff > 0 -%}
+                <span class="text-success">+ {{ diff }}</span>
+            {%- else -%}
+                <span class="text-danger">- {{ diff }}</span>
+                {%- endif -%})
+            </p>
+
+            {{ dump(ca) }}
+        </div>
+
+        <div class="col">
+            <table class="table">
+                <thead>
+                <tr>
+                    <td>Nom - Prénom</td>
+                    <td>Montant de la commande</td>
+                    <td>Date - heure</td>
+                    <td>Status</td>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in lastOrders %}
+                    <tr>
+                        <td>{{ order.customer.lastname }} {{ order.customer.firstname }}</td>
+                        <td>{{ order.total_paid|number_format(2) }} €</td>
+                        <td>{{ order.date_add|date('d/m/Y - h:m:s') }}</td>
+                        <td style="color:{{ order.status.color }};">{{ order.status.name }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
