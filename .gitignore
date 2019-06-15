@@ -2,3 +2,12 @@
 ###> app/docker ###
 docker-compose.override.yml
 ###< app/docker ###
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
