@@ -30,6 +30,9 @@ class PrestashopApi
     /** @var HttpClient $client */
     private $client;
 
+    private $customers = [];
+    private $status = [];
+
     public function __construct(HttpClientInterface $httpClient)
     {
         $this->httpClient = $httpClient;
@@ -154,24 +157,38 @@ class PrestashopApi
 
     private function getCustomer(int $id)
     {
+        if (\array_key_exists($id, $this->customers)) {
+            return $this->customers[$id];
+        }
+
         $response = $this->getClient()->request('GET', self::API_URL.'customers/'.$id.'?output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
         }
 
-        return json_decode($response->getContent())->customer;
+        $customer = json_decode($response->getContent())->customer;
+        $this->customers[$id] = $customer;
+
+        return $customer;
     }
 
     private function getOrderStatus(int $id)
     {
+        if (\array_key_exists($id, $this->status)) {
+            return $this->status[$id];
+        }
+
         $response = $this->getClient()->request('GET', self::API_URL.'order_states/'.$id.'?output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
         }
 
-        return json_decode($response->getContent())->order_state;
+        $customer = json_decode($response->getContent())->order_state;
+        $this->customers[$id] = $customer;
+
+        return $customer;
     }
 
     private function getThisWeekStartAndEnd($formated = true)
