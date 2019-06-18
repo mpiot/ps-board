@@ -3,50 +3,132 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block body %}
-    <div class="row">
-        <div class="col">
-            <p>
-                NbUsers = {{ nbUsers }}
-            </p>
-            <p>
-                NbNewUsers = {{ nbNewUsers }}
-            </p>
-            <p>
-                {% set diff = nbOrders - nbOrdersPreviousWeek %}
-                NbOrders = {{ nbOrders }}
-                ({%- if diff == 0 -%}
-                <span class="text-secondary">{{ diff }}</span>
-            {%- elseif diff > 0 -%}
-                <span class="text-success">+ {{ diff }}</span>
-            {%- else -%}
-                <span class="text-danger">- {{ diff }}</span>
-                {%- endif -%})
-            </p>
 
-            {{ dump(ca) }}
+    <div class="row">
+        <div class="col-3 mt-5">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Utilisateurs connectés</h5>
+                    <h3 class="card-text text-center">{{ nbUsers }}</h3>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Nouveaux utilisateurs</h5>
+                    <h3 class="card-text text-center">{{  nbNewUsers }}</h3>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">Nombre de commande</h5>
+                    <h3 class="card-text text-center">
+                        {% set diff = nbOrders - nbOrdersPreviousWeek %}
+
+                        {{ nbOrders }}
+
+                        ({%- if diff == 0 -%}
+                        <span class="text-secondary">{{ diff }}</span>
+                        {%- elseif diff > 0 -%}
+                            <span class="text-success">+{{ diff }}</span>
+                        {%- else -%}
+                            <span class="text-danger">{{ diff }}</span>
+                        {%- endif -%})
+                    </h3>
+                </div>
+            </div>
         </div>
 
-        <div class="col">
-            <table class="table">
-                <thead>
-                <tr>
-                    <td>Nom - Prénom</td>
-                    <td>Montant de la commande</td>
-                    <td>Date - heure</td>
-                    <td>Status</td>
-                </tr>
-                </thead>
-                <tbody>
-                {% for order in lastOrders %}
+        <div class="col-9 mt-5">
+            <div>
+                <h2>Dernières commandes</h2>
+                <table class="table table-striped">
+                    <thead>
                     <tr>
-                        <td>{{ order.customer.lastname }} {{ order.customer.firstname }}</td>
-                        <td>{{ order.total_paid|number_format(2) }} €</td>
-                        <td>{{ order.date_add|date('d/m/Y - h:m:s') }}</td>
-                        <td style="color:{{ order.status.color }};">{{ order.status.name }}</td>
+                        <td>Nom - Prénom</td>
+                        <td>Montant de la commande</td>
+                        <td>Date - heure</td>
+                        <td>Status</td>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {% for order in lastOrders %}
+                        <tr>
+                            <td>{{ order.customer.lastname }} {{ order.customer.firstname }}</td>
+                            <td>{{ order.total_paid|number_format(2) }} €</td>
+                            <td>{{ order.date_add|date('d/m/Y - h:m:s') }}</td>
+                            <td style="color:{{ order.status.color }};">{{ order.status.name }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">Il n'y a pas encore de commandes</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <h2>Chiffre d'affaire</h2>
+                <canvas class="my-4 w-100" id="myChart" width="900" height="200"></canvas>
+            </div>
         </div>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'horizontalBar',
+            data: {
+                labels: ['Annuel', 'Mensuel', 'Hebdomadaire'],
+                datasets: [{
+                    label: false,
+                    data: [{{ ca.year }}, {{ ca.month }}, {{ ca.week }}],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                legend: {
+                    display: false
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }],
+                    xAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                if (parseInt(value) >= 1000) {
+                                    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' €';
+                                } else {
+                                    return value + ' €';
+                                }
+                            }
+                        }
+                    }]
+                },
+                scaleLabel:
+                    function(label){return  '$' + label.value.toString();}
+            }
+        });
+    </script>
 {% endblock %}
