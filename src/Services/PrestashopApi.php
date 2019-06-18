@@ -107,6 +107,10 @@ class PrestashopApi
 
         $content = json_decode($response->getContent());
 
+        if ([] === $content) {
+            return null;
+        }
+
         foreach ($content->orders as &$order) {
             $order->customer = $this->getCustomer($order->id_customer);
             $order->status = $this->getOrderStatus($order->current_state);
