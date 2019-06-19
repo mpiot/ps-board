@@ -23,24 +23,26 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class PrestashopApi
 {
-    private const TOKEN = 'IF7ENX7FA4CMHXBA1SSV3EDHMUFH8K55';
-    private const API_URL = 'http://prestashop.quentinbesnard.fr/api/';
-
     private $httpClient;
     /** @var HttpClient $client */
+    private $url;
+    private $key;
+
     private $client;
 
     private $customers = [];
     private $status = [];
 
-    public function __construct(HttpClientInterface $httpClient)
+    public function __construct(HttpClientInterface $httpClient, string $url, string $key)
     {
         $this->httpClient = $httpClient;
+        $this->url = $url;
+        $this->key = $key;
     }
 
     public function getNumberOfLoginUsers()
     {
-        $response = $this->getClient()->request('GET', self::API_URL.'customers?display=[id]&filter[optin]=[1]&output_format=JSON');
+        $response = $this->getClient()->request('GET', $this->url.'customers?display=[id]&filter[optin]=[1]&output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
@@ -58,7 +60,7 @@ class PrestashopApi
     public function getNumberOfNewUsers()
     {
         $dates = $this->getThisWeekStartAndEnd();
-        $response = $this->getClient()->request('GET', self::API_URL.'customers?date=1&display=[id]&filter[date_add]=['.$dates['start'].','.$dates['end'].']&output_format=JSON');
+        $response = $this->getClient()->request('GET', $this->url.'customers?date=1&display=[id]&filter[date_add]=['.$dates['start'].','.$dates['end'].']&output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
@@ -81,7 +83,7 @@ class PrestashopApi
             $dates = $this->getThisWeekStartAndEnd();
         }
 
-        $response = $this->getClient()->request('GET', self::API_URL.'orders?date=1&display=[id,date_add]&sort=[date_add_DESC]&filter[date_add]=['.$dates['start'].','.$dates['end'].']&output_format=JSON');
+        $response = $this->getClient()->request('GET', $this->url.'orders?date=1&display=[id,date_add]&sort=[date_add_DESC]&filter[date_add]=['.$dates['start'].','.$dates['end'].']&output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
@@ -99,7 +101,7 @@ class PrestashopApi
     public function getLastOrders()
     {
         $dates = $this->getThisWeekStartAndEnd();
-        $response = $this->getClient()->request('GET', self::API_URL.'orders?date=1&display=[id,id_customer,total_paid,date_add,current_state]&filter[current_state]=[1|2|9|10|11|12|13|14]&filter[date_add]=['.$dates['start'].','.$dates['end'].']&limit=0,5&sort=[date_add_DESC]&output_format=JSON');
+        $response = $this->getClient()->request('GET', $this->url.'orders?date=1&display=[id,id_customer,total_paid,date_add,current_state]&filter[current_state]=[1|2|9|10|11|12|13|14]&filter[date_add]=['.$dates['start'].','.$dates['end'].']&limit=0,5&sort=[date_add_DESC]&output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
@@ -123,7 +125,7 @@ class PrestashopApi
     public function getCA()
     {
         $dates = $this->getThisYearStartAndEnd();
-        $response = $this->getClient()->request('GET', self::API_URL.'orders?date=1&display=[total_paid,date_add]&filter[current_state]=[1|2|9|10|11|12|13|14]&filter[date_add]=['.$dates['start'].','.$dates['end'].']&sort=[date_add_ASC]&output_format=JSON');
+        $response = $this->getClient()->request('GET', $this->url.'orders?date=1&display=[total_paid,date_add]&filter[current_state]=[1|2|9|10|11|12|13|14]&filter[date_add]=['.$dates['start'].','.$dates['end'].']&sort=[date_add_ASC]&output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
@@ -165,7 +167,7 @@ class PrestashopApi
             return $this->customers[$id];
         }
 
-        $response = $this->getClient()->request('GET', self::API_URL.'customers/'.$id.'?output_format=JSON');
+        $response = $this->getClient()->request('GET', $this->url.'customers/'.$id.'?output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
@@ -183,7 +185,7 @@ class PrestashopApi
             return $this->status[$id];
         }
 
-        $response = $this->getClient()->request('GET', self::API_URL.'order_states/'.$id.'?output_format=JSON');
+        $response = $this->getClient()->request('GET', $this->url.'order_states/'.$id.'?output_format=JSON');
 
         if (200 !== $response->getStatusCode()) {
             return null;
@@ -263,7 +265,7 @@ class PrestashopApi
     {
         if (null === $this->client) {
             $this->client = HttpClient::create([
-                'auth_basic' => [self::TOKEN],
+                'auth_basic' => [$this->key],
             ]);
         }
 

@@ -1,7 +1,6 @@
 ARG APCU_VERSION=5.1.17
 ARG COMPOSER_VERSION=1.8.6
 ARG ICU_VERSION=64.2
-ARG NODE_VERSION=12.4.0
 ARG PHP_VERSION=7.3.6
 ARG XDEBUG_VERSION=2.7.2
 
@@ -42,8 +41,6 @@ RUN export PHP_CPPFLAGS="${PHP_CPPFLAGS} -std=c++11"; \
     docker-php-ext-configure intl --with-icu-dir=/usr/local; \
     docker-php-ext-install -j "$(nproc)" \
             intl \
-            pdo \
-            pdo_mysql \
             zip \
             bcmath \
     ; \
@@ -95,7 +92,6 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/
 #####################################
 FROM app as app-dev
 
-ARG NODE_VERSION
 ARG COMPOSER_VERSION
 ARG XDEBUG_VERSION
 
@@ -111,13 +107,6 @@ RUN set -ex; \
     ; \
     # Clean aptitude cache and tmp directory
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*;
-
-# Install Node
-RUN set -ex; \
-    curl -L -o /tmp/nodejs.tar.gz https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz; \
-    tar xfvz /tmp/nodejs.tar.gz -C /usr/local --strip-components=1; \
-    rm -f /tmp/nodejs.tar.gz; \
-    npm install yarn -g
 
 # Install Composer
 RUN set -ex; \
@@ -152,22 +141,11 @@ CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 
 #####################################
-##       PROD ASSETS BUILDER       ##
-#####################################
-FROM node:${NODE_VERSION} as assets-builder
-
-COPY . /app
-WORKDIR /app
-
-RUN yarn install && yarn build && rm -R node_modules
-
-
-#####################################
 ##       PROD VENDOR BUILDER       ##
 #####################################
 FROM composer:${COMPOSER_VERSION} as vendor-builder
 
-COPY --from=assets-builder /app /app
+COPY . /app
 WORKDIR /app
 
 RUN APP_ENV=prod composer install -o -n --no-ansi --no-dev
