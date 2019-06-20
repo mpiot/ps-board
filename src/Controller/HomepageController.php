@@ -20,6 +20,7 @@ namespace App\Controller;
 
 use App\Services\PrestashopApi;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 class HomepageController extends AbstractController
@@ -43,6 +44,46 @@ class HomepageController extends AbstractController
             'nbOrdersPreviousWeek' => $nbOrdersPreviousWeek,
             'lastOrders' => $lastOrders,
             'ca' => $ca,
+        ]);
+    }
+
+    /**
+     * @Route("/stats/user", name="stats_user")
+     */
+    public function userStats(PrestashopApi $prestashopApi)
+    {
+        return new JsonResponse([
+            'connected_users' => $prestashopApi->getNumberOfLoginUsers(),
+            'new_users' => $prestashopApi->getNumberOfNewUsers(),
+        ]);
+    }
+
+    /**
+     * @Route("/stats/ca", name="stats_ca")
+     */
+    public function caStats(PrestashopApi $prestashopApi)
+    {
+        return new JsonResponse($prestashopApi->getCA());
+    }
+
+    /**
+     * @Route("/stats/orders", name="stats_order")
+     */
+    public function orderStats(PrestashopApi $prestashopApi)
+    {
+        return $this->render('homepage/_number_orders.html.twig', [
+            'nbOrders' => $prestashopApi->getNumberOfOrders(),
+            'nbOrdersPreviousWeek' => $prestashopApi->getNumberOfOrders(true),
+        ]);
+    }
+
+    /**
+     * @Route("/stats/orders-list", name="stats_order_list")
+     */
+    public function orderList(PrestashopApi $prestashopApi)
+    {
+        return $this->render('homepage/_orders_list.html.twig', [
+            'orders' => $prestashopApi->getLastOrders(),
         ]);
     }
 }

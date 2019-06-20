@@ -1,0 +1,13 @@
+<h3 id="number-orders" class="card-text text-center">
+    {% set diff = nbOrders - nbOrdersPreviousWeek %}
+
+    {{ nbOrders }}
+
+    ({%- if diff == 0 -%}
+    <span class="text-secondary">{{ diff }}</span>
+    {%- elseif diff > 0 -%}
+        <span class="text-success">+{{ diff }}</span>
+    {%- else -%}
+        <span class="text-danger">{{ diff }}</span>
+    {%- endif -%})
+</h3>

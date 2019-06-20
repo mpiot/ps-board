@@ -1,0 +1,24 @@
+<table id="orders-list" class="table table-striped">
+    <thead>
+    <tr>
+        <td>Nom - Prénom</td>
+        <td>Montant de la commande</td>
+        <td>Date - heure</td>
+        <td>Status</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for order in orders %}
+        <tr>
+            <td>{{ order.customer.lastname }} {{ order.customer.firstname }}</td>
+            <td>{{ order.total_paid|number_format(2) }} €</td>
+            <td>{{ order.date_add|date('d/m/Y - h:m:s') }}</td>
+            <td style="color:{{ order.status.color }};">{{ order.status.name }}</td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="4" class="text-center">Il n'y a pas encore de commandes</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
